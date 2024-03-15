@@ -15,7 +15,7 @@
 
 #define N 1000000
 
-int main()
+int main(int argc, char const *argv[])
 {
     // MPI.h Initialization
 
