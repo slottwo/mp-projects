@@ -1,7 +1,7 @@
 /**
- * @file 0.c
+ * @file sieve-of-Eratosthenes.c
  * @authors slottwo, GersonFeDutra
- * @brief Sieve of Eratosthenes
+ * @brief Sieve of Eratosthenes with message passing multiprocessing
  * @version 0.1
  * @date 2024-03-15
  *
