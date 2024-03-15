@@ -1,7 +1,7 @@
 /**
- * @file 0.c
+ * @file numerical-integration.c
  * @authors slottwo, GersonFeDutra
- * @brief Numerical Integration
+ * @brief Numerical Integration with message passing multiprocessing
  * @version 0.1
  * @date 2024-03-15
  *
