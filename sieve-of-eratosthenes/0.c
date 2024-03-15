@@ -39,6 +39,22 @@ int main(int argc, char const *argv[])
 
     /* INICIO */
 
+    /* SERIAL
+    int k = rank;
+    while (true)
+    {
+        for (int i = k * k; i < N; i += k)
+            non_primes[i] = true;
+
+        do
+            k++;
+        while (non_primes[k]);
+
+        if (k * k > N)
+            break;
+    }
+    */
+
     /* FIM */
 
     if (rank == 0)
