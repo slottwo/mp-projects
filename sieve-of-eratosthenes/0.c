@@ -37,10 +37,8 @@ int main(int argc, char const *argv[])
     if (rank == 0)
         t_init = MPI_Wtime();
 
-    /* INICIO */
-
-    /* SERIAL
-    int k = rank;
+    /* SERIAL ALGORITHM
+    int k = 2;
     while (true)
     {
         for (int i = k * k; i < N; i += k)
@@ -53,7 +51,9 @@ int main(int argc, char const *argv[])
         if (k * k > N)
             break;
     }
-    */
+     */
+    
+    /* INICIO */
 
     /* FIM */
 
