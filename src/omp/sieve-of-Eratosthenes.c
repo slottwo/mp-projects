@@ -19,40 +19,47 @@
 
 int main(int argc, char const *argv[])
 {
-    // bool *primes;
+    int NTHREADS = omp_get_num_procs() / 2;
 
-    // int size = N / wsize + (N % wsize != 0);
-    // bool *non_primes = (bool *)calloc(size, sizeof(bool));
+    /** @brief Initial time stamp */
+    double t;
 
-    // /** @brief Initial time stamp */
-    // double t_init;
-    // if (rank == 0)
-    //     t_init = MPI_Wtime();
+    bool *primes;
+    bool *non_primes;
 
-    // /* SERIAL ALGORITHM
-    // int k = 2;
-    // while (true)
-    // {
-    //     for (int i = k * k; i < N; i += k)
-    //         non_primes[i] = true;
+    /* SERIAL ALGORITHM */
 
-    //     do
-    //         k++;
-    //     while (non_primes[k]);
+    t = omp_get_wtime();
 
-    //     if (k * k > N)
-    //         break;
-    // }
-    //  */
-    
-    // /* INICIO */
+    non_primes = (bool *)calloc(N, sizeof(bool));
 
-    // /* FIM */
+    int k = 2;
+    while (true)
+    {
+        for (int i = k * k; i < N; i += k)
+            non_primes[i] = true;
 
-    // if (rank == 0)
-    //     printf("Δt: %f\n", MPI_Wtime() - t_init);
+        do
+            k++;
+        while (non_primes[k]);
 
-    // free(primes);
+        if (k * k > N)
+            break;
+    }
+
+    printf("Δt: %f\n", omp_get_wtime() - t);
+
+    /* PARALLEL ALGORITHM */
+
+    t = omp_get_wtime();
+
+#pragma omp parallel num_threads(NTHREADS)
+    {
+    }
+
+    printf("Δt: %f\n", omp_get_wtime() - t);
+
+    // End
 
     return 0;
 }
