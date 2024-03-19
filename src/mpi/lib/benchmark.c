@@ -9,37 +9,82 @@ typedef struct node {
     const char *name;
     struct node *next;
 }* List;
-struct info {
+void print_list(List l, size_t i)
+{
+    printf("<node%d>:{start_time: %f, end_time: %f, name: %s", i, l->start_time, l->end_time, l->name);
+
+    if (l->next == NULL)
+        printf("}\n");
+    else {
+        printf(",\n");
+        print_list(l->next, i + 1);
+    }
+}
+typedef struct info {
     List list;
     List tail;
     bool stopped;
     int rank;
-};
+}* Info;
+void print_info(Info info)
+{
+    printf("info:{stopped: %d, rank: %d, list:[\n",info->stopped, info->rank);
+    print_list(info->list, 0);
+    printf("], tail:[\n");
+    print_list(info->tail, 0);
+    printf("]\n");
+    printf("\n");
+}
 struct group_node {
     const char *name;
-    struct info *list;
+    Info list;
     struct group_node *next;
 };
+void print_group(struct group_node *g)
+{
+    printf("{group:{name: %s, info-list:[\n");
+    print_info(g->list);
+    printf("], next->[");
+
+    if (g->next != NULL) {
+        printf(",\n");
+        print_group(g->next);
+    }
+    else
+        printf("]}\n");
+}
 struct benchmark_info {
     struct group_node *list;
     struct group_node *tail;
     double base_time;
-    struct info *current;
+    Info current;
 };
+void print_bench(BenchmarkInfo b)
+{
+    printf("full benchmark{base_time: %f, group-list:(", b->base_time);
+    print_group(b->list);
+    printf("), tail-list:(");
+    print_group(b->tail);
+    printf("), current-info:|");
+    print_info(b->current);
+    printf("|\n");
+}
 static unsigned using_groups = 0;
 
-static void _start(const char *name, BenchmarkInfo benchmark)
+static Info _create_info(const char *name, int rank)
 {
-    struct info *info = malloc(sizeof(struct info));
+    // Adds info node
+    Info info = malloc(sizeof(struct info));
+    info->rank = rank;
     info->stopped = false;
 
-    // Adds info node
-    info->tail = info->list = malloc(sizeof(struct node));
-    info->tail->name = name;
-    info->tail->next = NULL;
-    info->tail->start_time = MPI_Wtime();
+    List next = malloc(sizeof(struct node));
+    info->tail = info->list = next;
+    next->name = name;
+    next->next = NULL;
+    next->start_time = MPI_Wtime();
 
-    benchmark->current = info;
+    return info;
 }
 
 BenchmarkInfo benchmark_start(const char *name, int rank)
@@ -50,15 +95,16 @@ BenchmarkInfo benchmark_start(const char *name, int rank)
     fflush(stdout);
 
     BenchmarkInfo benchmark = malloc(sizeof(struct benchmark_info));
+    benchmark->base_time = 0.0;
 
     // Force group creation
     struct group_node *group = malloc(sizeof(struct group_node));
     benchmark->tail = benchmark->list = group;
-    benchmark->tail->name = DEFAULT;
-    benchmark->tail->next = NULL;
+    group->name = DEFAULT;
+    group->next = NULL;
 
-    _start(name, benchmark);
-    benchmark->tail->list = benchmark->current;
+    benchmark->current = _create_info(name, benchmark->current->rank);
+    group->list = benchmark->current;
 
     return benchmark;
 }
@@ -82,7 +128,7 @@ double benchmark_next(const char *name, BenchmarkInfo benchmark)
     printf("%s time: ...", name);
     fflush(stdout);
 
-    struct info *info = benchmark->current;
+    Info info = benchmark->current;
     info->tail->end_time = time; // Store time
 
     // Add a info node
@@ -100,8 +146,12 @@ double benchmark_stop(BenchmarkInfo benchmark)
 
     printf("\b\b\b%g\n", time);
 
-    struct info *info = benchmark->current;
+    Info info = benchmark->current;
+
+    print_bench(benchmark);
+
     info->tail->end_time = time;
+
     info->stopped = true;
 
     return time;
@@ -112,19 +162,19 @@ void benchmark_back(const char *name, BenchmarkInfo benchmark)
     printf("%s time: ...", name);
     fflush(stdout);
 
-    struct info *info = benchmark->current;
-    info->stopped = false;
+    Info info = benchmark->current;
+
+    // debug
+    //print_info(info);
 
     // Add next node
-	info->tail = info->tail->next = malloc(sizeof(struct node));
+    List node = malloc(sizeof(struct node));
+	info->tail = info->tail->next = node;
 
-    MPI_Finalize();
-    return;
-
-	info->tail->name = name;
-	info->tail->next = NULL;
-
-	info->tail->start_time = MPI_Wtime();
+    node->start_time = node->end_time = 0.0;
+	node->name = name;
+	node->next = NULL;
+	node->start_time = MPI_Wtime();
 }
 
 static double _group_total_time(struct group_node *g)
@@ -149,7 +199,7 @@ void benchmark_group_next(const char *name, const char *next, BenchmarkInfo benc
 
     printf("\nGroup %s:\n", name);
 
-    _start(next, benchmark);
+    benchmark->current = _create_info(next, benchmark->current->rank);
 
     // Add next group node
     benchmark->tail = benchmark->tail->next = malloc(sizeof(struct group_node));
@@ -168,7 +218,7 @@ void print_efficiency(double t_serial, double t_parallel, unsigned threads_used)
 	printf("Efficiency: %.4f\n", speedup / threads_used);
 }
 
-static void _benchmark_sequence(int wsize, bool clear, struct info *info)
+static void _benchmark_sequence(int wsize, bool clear, Info info)
 {
     const char *fast_name = info->list->name;
     double serial_time, fast_time;
@@ -201,8 +251,7 @@ static void _benchmark_sequence(int wsize, bool clear, struct info *info)
     printf("\nFastest: %s\n", fast_name);
 }
 
-
-static double _benchmark_group(int wsize, bool clear, struct info *info)
+static double _benchmark_group(int wsize, bool clear, Info info)
 {
     double total = 0.0;
 

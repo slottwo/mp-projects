@@ -59,12 +59,12 @@ int main(int argc, char const *argv[])
         }
         while (!(k * k > N));
 
+
         /** @brief Final time stamp **/
         benchmark_stop(benchmark);
 
         free(non_primes);
         benchmark_show(wsize, true, benchmark);
-
     }
 
     /** @brief Wait serial execution at ROOT **/
@@ -72,22 +72,16 @@ int main(int argc, char const *argv[])
 
     /** @brief Initial time stamp  **/
     if (rank == ROOT)
-    {
         benchmark_back("Parallel", benchmark);
-        return 0;
-    }
     else
-    {
-        benchmark = benchmark_start("Parallel", rank);
-    }
+        ;//benchmark = benchmark_start("Parallel", rank);
 
     MPI_Finalize();
     return 0;
-
     /* PARALLEL ALGORITHM */
 
-    int size = N / wsize + (N % wsize != 0);
-    bool *non_primes = (bool *)calloc(size, sizeof(bool));
+    //int size = N / wsize + (N % wsize != 0);
+    bool *non_primes = (bool *)calloc(N, sizeof(bool));
 
     /* START */
     int k = 2;
@@ -108,6 +102,7 @@ int main(int argc, char const *argv[])
         benchmark_stop(benchmark);
 
     free(non_primes);
+
     benchmark_show(wsize, true, benchmark);
 
     MPI_Finalize();
