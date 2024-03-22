@@ -12,7 +12,7 @@ if [ ! "$2" ]; then
     exit 2
 fi
 
-#chmod +x ./src/mpi/lib/build.sh
+chmod +x ./src/mpi/lib/build.sh
 ./src/mpi/lib/build.sh
 
 if command -v module > /dev/null 2>&1; then
@@ -27,8 +27,13 @@ fi
 cd .bin
 
 if [ "$1" == "sieve-of-Eratosthenes" ]; then
-    mpicc -c ../src/mpi/$1.c -lm
-    mpicc -o program.out "$1".o ./lib/*.o -lm
+    if [ "$3" ] && [ "$3" == "-D" ]; then
+        mpicc -c ../src/mpi/$1.c -lm -g -fdiagnostics-color=always -D DEBUG
+        mpicc -o program.out "$1".o ./lib/*.o -lm
+    else
+        mpicc -c ../src/mpi/$1.c -lm
+        mpicc -o program.out "$1".o ./lib/*.o -lm
+    fi
 else
     mpicc -o program.out ../src/mpi/$1.c -lm
 fi

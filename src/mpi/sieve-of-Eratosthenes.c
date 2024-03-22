@@ -17,16 +17,34 @@
 
 /** @brief 1 GB */
 #define _GB 1073741824
-//#define N _GB
+
+#ifdef DEBUG
 #define N _GB / 1024
+#else
+#define N _GB
+#endif
 
 #define ROOT 0 // MPI main process
 
-int main(int argc, char const *argv[])
+#ifdef DEBUG
+#include <unistd.h> // UNIX only
+#endif
+
+int main(int argc, char *argv[])
 {
+
+#ifdef DEBUG // Compile with `-D DEBUG`
+    // Waits debugger attachment, must be manually skip
+    {
+        int attached=0;
+        while (!attached)
+            sleep(3);
+    }
+#endif
+
     /* MPI.h Initialization */
     int wsize, rank;
-    MPI_Init(NULL, NULL);
+    MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Status status;
