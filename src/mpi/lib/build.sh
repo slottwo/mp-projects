@@ -10,7 +10,12 @@ fi
 for file in "$(dirname $0)"/*.c
 do
     input="${file%.*}"
-    mpicc -c "$input".c
+
+    if [ "$1" ] && [ "$1" == "-D" ]; then
+        mpicc -c "$input".c -g -D DEBUG
+    else
+        mpicc -c "$input".c
+    fi
     out=$(basename "$input").o
     mv "$out" .bin/lib
 done

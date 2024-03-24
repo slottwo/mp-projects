@@ -12,8 +12,15 @@ if [ ! "$2" ]; then
     exit 2
 fi
 
-chmod +x ./src/mpi/lib/build.sh
-./src/mpi/lib/build.sh
+if [[ ! -x ./src/mpi/lib/build.sh ]]; then
+    chmod +x ./src/mpi/lib/build.sh
+fi
+
+if [ "$3" ] && [ "$3" == "-D" ]; then
+    ./src/mpi/lib/build.sh -D
+else
+    ./src/mpi/lib/build.sh
+fi
 
 if command -v module > /dev/null 2>&1; then
     if ! module list 2>&1 | grep -q mpi; then
@@ -29,7 +36,7 @@ cd .bin
 if [ "$1" == "sieve-of-Eratosthenes" ]; then
     if [ "$3" ] && [ "$3" == "-D" ]; then
         mpicc -c ../src/mpi/$1.c -lm -g -fdiagnostics-color=always -D DEBUG
-        mpicc -o program.out "$1".o ./lib/*.o -lm
+        mpicc -o program.out "$1".o ./lib/*.o -lm -g
     else
         mpicc -c ../src/mpi/$1.c -lm
         mpicc -o program.out "$1".o ./lib/*.o -lm
@@ -41,6 +48,23 @@ fi
 N=$(($2 > 1 ? $2 : 2))
 
 if [ -f program.out ]; then
-    mpiexec -n $N ./program.out
+    if [ "$3" ] && [ "$3" == "-D" ]; then
+        mpiexec -n $N ./program.out &
+        sleep 1 # Waits before attach
+        PIDS=$(pgrep program)
+        PORT=1234
+        # Attach to debugger server
+        for pid in ${PIDS[@]}; do
+            gdbserver --attach :$PORT "$pid" &
+            PORT=$((PORT+1))
+        done
+        wait $!
+    else
+        if [ ! -d log ]; then
+            mkdir log
+        fi
+        mpiexec -n 2 --output file=log/.log ./program.out
+        #mpiexec -n 2 ./program.out -l -prepend-rank -ordered-output # mpihc only
+    fi
     rm program.out
 fi

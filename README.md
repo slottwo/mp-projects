@@ -1,8 +1,17 @@
 # Multiprocessing Projects
 
+## Install
+
+* Open MPI
+
+Remember to give the scripts running auth:
+`chmod +x *.sh`
+
 ## Debug (VsCode) - Linux
 
 ### Setup
+
+You need to install `gdb` debugger.
 
 Add the content to the `.vscode/` setup files:
 

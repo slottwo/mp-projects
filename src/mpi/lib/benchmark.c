@@ -9,66 +9,23 @@ typedef struct node {
     const char *name;
     struct node *next;
 }* List;
-void print_list(List l, size_t i)
-{
-    printf("<node%d>:{start_time: %f, end_time: %f, name: %s", i, l->start_time, l->end_time, l->name);
-
-    if (l->next == NULL)
-        printf("}\n");
-    else {
-        printf(",\n");
-        print_list(l->next, i + 1);
-    }
-}
 typedef struct info {
     List list;
     List tail;
     bool stopped;
     int rank;
 }* Info;
-void print_info(Info info)
-{
-    printf("info:{stopped: %d, rank: %d, list:[\n",info->stopped, info->rank);
-    print_list(info->list, 0);
-    printf("], tail:[\n");
-    print_list(info->tail, 0);
-    printf("]\n");
-    printf("\n");
-}
 struct group_node {
     const char *name;
     Info list;
     struct group_node *next;
 };
-void print_group(struct group_node *g)
-{
-    printf("{group:{name: %s, info-list:[\n");
-    print_info(g->list);
-    printf("], next->[");
-
-    if (g->next != NULL) {
-        printf(",\n");
-        print_group(g->next);
-    }
-    else
-        printf("]}\n");
-}
 struct benchmark_info {
     struct group_node *list;
     struct group_node *tail;
     double base_time;
     Info current;
 };
-void print_bench(BenchmarkInfo b)
-{
-    printf("full benchmark{base_time: %f, group-list:(", b->base_time);
-    print_group(b->list);
-    printf("), tail-list:(");
-    print_group(b->tail);
-    printf("), current-info:|");
-    print_info(b->current);
-    printf("|\n");
-}
 static unsigned using_groups = 0;
 
 static Info _create_info(const char *name, int rank)
@@ -103,8 +60,8 @@ BenchmarkInfo benchmark_start(const char *name, int rank)
     group->name = DEFAULT;
     group->next = NULL;
 
-    benchmark->current = _create_info(name, benchmark->current->rank);
-    group->list = benchmark->current;
+    benchmark->current = _create_info(name, rank);
+    group->list = benchmark->current; // TODO -> set single attr
 
     return benchmark;
 }
@@ -148,8 +105,6 @@ double benchmark_stop(BenchmarkInfo benchmark)
 
     Info info = benchmark->current;
 
-    print_bench(benchmark);
-
     info->tail->end_time = time;
 
     info->stopped = true;
@@ -163,9 +118,6 @@ void benchmark_back(const char *name, BenchmarkInfo benchmark)
     fflush(stdout);
 
     Info info = benchmark->current;
-
-    // debug
-    //print_info(info);
 
     // Add next node
     List node = malloc(sizeof(struct node));
@@ -231,7 +183,7 @@ static void _benchmark_sequence(int wsize, bool clear, Info info)
         free(info->list);
 
 	while (next != NULL) {
-        printf("\n* %s *", next->name);
+        printf("\n* %s *\n", next->name);
 		time = next->start_time - next->end_time;
 
 		if (time <= fast_time) {

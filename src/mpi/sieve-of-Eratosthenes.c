@@ -28,17 +28,22 @@
 
 #ifdef DEBUG
 #include <unistd.h> // UNIX only
+#include "lib/utils.h"
 #endif
 
 int main(int argc, char *argv[])
 {
 
 #ifdef DEBUG // Compile with `-D DEBUG`
-    // Waits debugger attachment, must be manually skip
+    // Waits debugger attachment
     {
+        setup_debug();
         int attached=0;
-        while (!attached)
+        while (!(attached || is_debugger_attached())) {
+            // Define a label using GDB-specific assembly command
+            __asm__("gdb_breakpoint:");
             sleep(3);
+        }
     }
 #endif
 
@@ -77,12 +82,10 @@ int main(int argc, char *argv[])
         }
         while (!(k * k > N));
 
-
         /** @brief Final time stamp **/
         benchmark_stop(benchmark);
 
         free(non_primes);
-        benchmark_show(wsize, true, benchmark);
     }
 
     /** @brief Wait serial execution at ROOT **/
@@ -92,10 +95,8 @@ int main(int argc, char *argv[])
     if (rank == ROOT)
         benchmark_back("Parallel", benchmark);
     else
-        ;//benchmark = benchmark_start("Parallel", rank);
+        benchmark = benchmark_start("Parallel", rank);
 
-    MPI_Finalize();
-    return 0;
     /* PARALLEL ALGORITHM */
 
     //int size = N / wsize + (N % wsize != 0);
