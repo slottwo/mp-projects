@@ -63,7 +63,11 @@ if [ -f program.out ]; then
         if [ ! -d log ]; then
             mkdir log
         fi
-        mpiexec -n 2 --output file=log/.log ./program.out
+        if [ "$4" ] && [ "$3" == "-n" ]; then
+            mpirun -n 2 --output file=log/.log ./program.out -n $4
+        else
+            mpiexec -n 2 --output file=log/.log ./program.out
+        fi
         #mpiexec -n 2 ./program.out -l -prepend-rank -ordered-output # mpihc only
     fi
     rm program.out

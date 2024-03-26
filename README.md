@@ -7,11 +7,17 @@
 Remember to give the scripts running auth:
 `chmod +x *.sh`
 
+## Run
+
+Simply call [./run_mpi.sh](./run_mpi.sh) or [./run_mp.sh](./run_mp.sh)
+
 ## Debug (VsCode) - Linux
 
 ### Setup
 
 You need to install `gdb` debugger.
+
+You can optionally run the docker container for this project.
 
 Add the content to the `.vscode/` setup files:
 

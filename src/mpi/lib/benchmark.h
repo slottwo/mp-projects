@@ -5,8 +5,16 @@
 //extern struct benchmark_info;
 typedef struct benchmark_info *BenchmarkInfo;
 
+/* Change the dynamic mode:
+ * If dynamic is off will print rank on each individual line.
+ * Use dynamic mode when splitting thread buffers. */
+void set_dynamic(bool, BenchmarkInfo);
+
+/* Turn the current execution group the serial for comparison. */
+void set_group_as_serial(int source, BenchmarkInfo benchmark);
+
 /* Start the benchmark timer register from base execution. */
-BenchmarkInfo benchmark_start(const char *, int rank);
+BenchmarkInfo benchmark_start(const char *, int rank, bool dynamic);
 
 /* Starts next benchmark register. */
 double benchmark_next(const char *, BenchmarkInfo);
@@ -21,7 +29,7 @@ void benchmark_back(const char *name, BenchmarkInfo);
 void benchmark_clear(BenchmarkInfo);
 
 /* Starts sequence of executions on group mode. */
-BenchmarkInfo benchmark_group_start(const char *name, const char *first, int rank);
+BenchmarkInfo benchmark_group_start(const char *name, const char *first, int rank, bool dynamic);
 
 /* Next sequence. */
 void benchmark_group_next(const char *name, const char *next, BenchmarkInfo);
