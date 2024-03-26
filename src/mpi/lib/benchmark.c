@@ -5,7 +5,8 @@
 #include <mpi.h>
 #include <assert.h>
 
-#define NAME_BUFF_SIZE 255
+#define NAME_BUFF_SIZE 256
+#define JSON_NODE_SIZE 256 + NAME_BUFF_SIZE
 #define PROMPT_CLR "\33[35m"
 #define MEMERR 43 // Memory allocation error
 #define ROOT 0 // MPI main process
@@ -14,8 +15,14 @@
 #define max(A, B) (((A) > (B)) ? (A) : (B))
 
 // Crash the app if memory was not created correctly
-#define emalloc(S) ({void *p = malloc(S); if (p == NULL) exit(MEMERR); p;}) // error check malloc
-#define ecalloc(N, S) ({void *p = calloc(N, S); if (p == NULL) exit(MEMERR); p;}) // error check calloc
+#define emalloc(S) ({\
+        void *p = malloc(S);\
+        if (p == NULL) MPI_Abort(MPI_COMM_WORLD, MEMERR);\
+        p;}) // error check malloc
+#define ecalloc(N, S) ({\
+        void *p = calloc(N, S);\
+        if (p == NULL) MPI_Abort(MPI_COMM_WORLD, MEMERR);\
+        p;}) // error check calloc
 // Read about GCC compound statements here: <https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html>
 // and here: <https://stackoverflow.com/a/3533300>
 
@@ -29,6 +36,7 @@ typedef struct info {
     List list;
     List tail;
     bool stopped;
+    int n;
 }* Info;
 struct group_node {
     const char *name;
@@ -61,6 +69,7 @@ static Info _create_info(const char *name)
     // Adds info node
     Info info = emalloc(sizeof(struct info));
     info->stopped = false;
+    info->n = 1;
 
     List next = emalloc(sizeof(struct node));
     info->tail = info->list = next;
@@ -145,6 +154,7 @@ void benchmark_back(const char *name, BenchmarkInfo benchmark)
         fprintf(stderr, PROMPT_CLR "[%d] %s Δt: Loading...\33[m\n", benchmark->rank, name);
 
     Info info = benchmark->current;
+    info->n++;
 
     // Add next node
     List node = emalloc(sizeof(struct node));
@@ -414,4 +424,119 @@ void benchmark_clear(BenchmarkInfo benchmark)
     }
 
     free(benchmark);
+}
+
+static size_t _save_node(List node, int rank, char **out)
+{
+    // Create the JSON data for tracing
+    char json_data[JSON_NODE_SIZE];
+    sprintf(json_data, "{"
+            "\"name\":\"%s\","
+            "\"ph\":\"B\","
+            "\"ts\":%f,"
+            "\"pid\":%d,"
+            "\"tid\":%d"
+        "}," "\n{"
+            "\"name\":\"%s\","
+            "\"ph\":\"E\","
+            "\"ts\":%f,"
+            "\"pid\":%d,"
+            "\"tid\":%d"
+        "}", node->name, node->start_time, rank, rank,
+             node->name, node->end_time, rank, rank);
+
+    size_t size = strlen(json_data) + 1;
+    printf("[%lu]\n", size);
+
+    *out = emalloc(sizeof(char) * size);
+    strcpy(*out, json_data);
+
+    return size;
+}
+
+void benchmark_save(int wsize, BenchmarkInfo benchmark)
+{
+    int rank = benchmark->rank;
+    Info info = benchmark->list->list;
+
+    char **data = ecalloc(info->n, sizeof(char *));
+    size_t total_size;
+    int c = 0;
+
+    // TODO -> Benchmark save on groups
+    for (List l = info->list; l != NULL; l = l->next) {
+        printf("[%d] safe %d\n", rank, c);
+        // FIXME -> Memory error
+        total_size += _save_node(l, rank, data + c);
+        printf("[%d] safe %d\n", rank, c);
+        c++;
+    }
+
+    // Gather JSON data from all ranks into a single buffer on ROOT rank
+    char *file_buffer = NULL;
+    size_t file_size;
+
+    MPI_Reduce(&total_size, &file_size, 1, MPI_UNSIGNED_LONG, MPI_SUM, ROOT, MPI_COMM_WORLD);
+
+    if (rank == ROOT)
+        file_buffer = (char *)emalloc(file_size * sizeof(char));
+
+    size_t offset = 0;
+    for (int r = 0; r < wsize; r++) {
+        if (r == ROOT)
+            for (int i = 0; i < info->n; i++) {
+                size_t size = strlen(data[i]) + 1;
+                strcpy(file_buffer + offset, data[i]);
+                offset += size;
+                free(data[i]);
+            }
+        else if (r == rank) {
+            MPI_Send(&info->n, 1, MPI_UNSIGNED_LONG, ROOT, r, MPI_COMM_WORLD);
+
+            for (int i = 0; i < info->n; i++) {
+                size_t size = strlen(data[i]); // Removing terminator char
+                MPI_Send(&size, 1, MPI_UNSIGNED_LONG, ROOT, i, MPI_COMM_WORLD);
+                MPI_Send(data + i, size, MPI_CHAR, ROOT, i, MPI_COMM_WORLD);
+                free(data[i]);
+            }
+        }
+        else if (benchmark->rank == ROOT) {
+            size_t n;
+            MPI_Recv(&n, 1, MPI_UNSIGNED_LONG, r, r, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            for (int i = 0; i < n; i++) {
+                size_t size;
+                MPI_Recv(&size, 1, MPI_UNSIGNED_LONG, r, i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Recv(file_buffer + offset, size, MPI_CHAR, r, i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+                if (offset > 0)
+                    // as terminator was ignored, will not overflow
+                    file_buffer[offset] = ',';
+
+                offset += size + 1;
+            }
+        }
+    }
+    file_buffer[offset] = '\0';
+    free(data);
+
+    // ROOT rank writes JSON data to file
+    if (rank == 0) {
+        // Create the JSON file for tracing
+        FILE *fp = fopen("trace.json", "w");
+        if (fp == NULL) {
+            fprintf(stderr, "\33[31m""Error opening file.\33[m\n");
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+
+        fprintf(fp, "{\"traceEvents\":[\n");
+        fprintf(fp, "%s\n", file_buffer);
+        fprintf(fp, "]}");
+
+        fclose(fp);
+
+        fprintf(stderr, "\33[32m""JSON file created successfully.\33[m\n");
+
+        free(file_buffer); // Free the memory allocated for the buffer
+    }
 }

@@ -36,3 +36,6 @@ void benchmark_group_next(const char *name, const char *next, BenchmarkInfo);
 
 /* Generates benchmark for registered executions. */
 void benchmark_show(int wsize, bool clear, BenchmarkInfo);
+
+/* Saves data as json for chrome tracing visual benchmark. */
+void benchmark_save(int wsize, BenchmarkInfo);

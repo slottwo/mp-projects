@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Status status;
 
+    /* Parse arguments */
     bool dynamic = false;
     size_t n = N;
     if (argc > 1)
@@ -138,6 +139,8 @@ int main(int argc, char *argv[])
 
     free(non_primes);
 
+    // TODO -> fix
+    //benchmark_save(wsize, benchmark);
     benchmark_show(wsize, true, benchmark);
 
     MPI_Finalize();
