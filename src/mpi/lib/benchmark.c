@@ -442,13 +442,12 @@ static size_t _save_node(List node, int rank, char **out)
             "\"ts\":%f,"
             "\"pid\":%d,"
             "\"tid\":%d"
-        "}", node->name, node->start_time, rank, rank,
+        "},\n", node->name, node->start_time, rank, rank,
              node->name, node->end_time, rank, rank);
 
     size_t size = strlen(json_data) + 1;
-    printf("[%lu]\n", size);
 
-    *out = emalloc(sizeof(char) * size);
+    *out = ecalloc(size, sizeof(char));
     strcpy(*out, json_data);
 
     return size;
@@ -460,38 +459,37 @@ void benchmark_save(int wsize, BenchmarkInfo benchmark)
     Info info = benchmark->list->list;
 
     char **data = ecalloc(info->n, sizeof(char *));
-    size_t total_size;
+    size_t total_size = 0;
     int c = 0;
 
     // TODO -> Benchmark save on groups
     for (List l = info->list; l != NULL; l = l->next) {
-        printf("[%d] safe %d\n", rank, c);
         // FIXME -> Memory error
-        total_size += _save_node(l, rank, data + c);
-        printf("[%d] safe %d\n", rank, c);
+        total_size += _save_node(l, rank, data + c) + 1; // Adds one space to the line-break
         c++;
     }
 
     // Gather JSON data from all ranks into a single buffer on ROOT rank
     char *file_buffer = NULL;
-    size_t file_size;
+    size_t file_size = 0;
 
     MPI_Reduce(&total_size, &file_size, 1, MPI_UNSIGNED_LONG, MPI_SUM, ROOT, MPI_COMM_WORLD);
 
     if (rank == ROOT)
-        file_buffer = (char *)emalloc(file_size * sizeof(char));
+        file_buffer = (char *)ecalloc(file_size, sizeof(char));
 
     size_t offset = 0;
     for (int r = 0; r < wsize; r++) {
-        if (r == ROOT)
+        if (r == ROOT && rank == ROOT)
             for (int i = 0; i < info->n; i++) {
-                size_t size = strlen(data[i]) + 1;
+                bool on_offset = offset > 0;
+                size_t size = strlen(data[i]);
                 strcpy(file_buffer + offset, data[i]);
                 offset += size;
                 free(data[i]);
             }
         else if (r == rank) {
-            MPI_Send(&info->n, 1, MPI_UNSIGNED_LONG, ROOT, r, MPI_COMM_WORLD);
+            MPI_Send(&info->n, 1, MPI_INT, ROOT, r, MPI_COMM_WORLD);
 
             for (int i = 0; i < info->n; i++) {
                 size_t size = strlen(data[i]); // Removing terminator char
@@ -501,27 +499,24 @@ void benchmark_save(int wsize, BenchmarkInfo benchmark)
             }
         }
         else if (benchmark->rank == ROOT) {
-            size_t n;
-            MPI_Recv(&n, 1, MPI_UNSIGNED_LONG, r, r, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            int n;
+            MPI_Recv(&n, 1, MPI_INT, r, r, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
+            // FIXME -> For some reason is generating some trash
             for (int i = 0; i < n; i++) {
                 size_t size;
                 MPI_Recv(&size, 1, MPI_UNSIGNED_LONG, r, i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 MPI_Recv(file_buffer + offset, size, MPI_CHAR, r, i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-                if (offset > 0)
-                    // as terminator was ignored, will not overflow
-                    file_buffer[offset] = ',';
-
-                offset += size + 1;
+                offset += size;
             }
         }
     }
-    file_buffer[offset] = '\0';
+    if (rank == ROOT)
+        file_buffer[offset - 2] = '\0'; // Remove last comma
     free(data);
 
     // ROOT rank writes JSON data to file
-    if (rank == 0) {
+    if (rank == ROOT) {
         // Create the JSON file for tracing
         FILE *fp = fopen("trace.json", "w");
         if (fp == NULL) {
@@ -530,6 +525,7 @@ void benchmark_save(int wsize, BenchmarkInfo benchmark)
         }
 
         fprintf(fp, "{\"traceEvents\":[\n");
+        fprintf(stderr, "\33[36m%s\n]}\n\33[m", file_buffer);
         fprintf(fp, "%s\n", file_buffer);
         fprintf(fp, "]}");
 
