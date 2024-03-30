@@ -458,7 +458,13 @@ void benchmark_save(int wsize, BenchmarkInfo benchmark)
     int rank = benchmark->rank;
     Info info = benchmark->list->list;
 
-    char **data = ecalloc(info->n, sizeof(char *));
+    char **data;
+
+    int err;
+    if (err = MPI_Alloc_mem(info->n, MPI_INFO_NULL, &data))
+        MPI_Abort(MPI_COMM_WORLD, err);
+
+    ecalloc(info->n, sizeof(char *));
     size_t total_size = 0;
     int c = 0;
 
@@ -482,7 +488,6 @@ void benchmark_save(int wsize, BenchmarkInfo benchmark)
     for (int r = 0; r < wsize; r++) {
         if (r == ROOT && rank == ROOT)
             for (int i = 0; i < info->n; i++) {
-                bool on_offset = offset > 0;
                 size_t size = strlen(data[i]);
                 strcpy(file_buffer + offset, data[i]);
                 offset += size;
@@ -494,7 +499,7 @@ void benchmark_save(int wsize, BenchmarkInfo benchmark)
             for (int i = 0; i < info->n; i++) {
                 size_t size = strlen(data[i]); // Removing terminator char
                 MPI_Send(&size, 1, MPI_UNSIGNED_LONG, ROOT, i, MPI_COMM_WORLD);
-                MPI_Send(data + i, size, MPI_CHAR, ROOT, i, MPI_COMM_WORLD);
+                MPI_Send(data[i], size, MPI_CHAR, ROOT, i, MPI_COMM_WORLD);
                 free(data[i]);
             }
         }
@@ -502,7 +507,6 @@ void benchmark_save(int wsize, BenchmarkInfo benchmark)
             int n;
             MPI_Recv(&n, 1, MPI_INT, r, r, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-            // FIXME -> For some reason is generating some trash
             for (int i = 0; i < n; i++) {
                 size_t size;
                 MPI_Recv(&size, 1, MPI_UNSIGNED_LONG, r, i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -525,7 +529,6 @@ void benchmark_save(int wsize, BenchmarkInfo benchmark)
         }
 
         fprintf(fp, "{\"traceEvents\":[\n");
-        fprintf(stderr, "\33[36m%s\n]}\n\33[m", file_buffer);
         fprintf(fp, "%s\n", file_buffer);
         fprintf(fp, "]}");
 
