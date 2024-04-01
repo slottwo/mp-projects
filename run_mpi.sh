@@ -16,16 +16,16 @@ if [[ ! -x ./src/mpi/lib/build.sh ]]; then
     chmod +x ./src/mpi/lib/build.sh
 fi
 
-if [ "$3" ] && [ "$3" == "-D" ]; then
-    ./src/mpi/lib/build.sh -D
-else
-    ./src/mpi/lib/build.sh
-fi
-
 if command -v module > /dev/null 2>&1; then
     if ! module list 2>&1 | grep -q mpi; then
         module load mpi
     fi
+fi
+
+if [ "$3" ] && [ "$3" == "-D" ]; then
+    ./src/mpi/lib/build.sh -D
+else
+    ./src/mpi/lib/build.sh
 fi
 
 if [ ! -d ".bin" ]; then
@@ -56,7 +56,7 @@ if [ -f program.out ]; then
         # Attach to debugger server
         for pid in ${PIDS[@]}; do
             gdbserver --attach :$PORT "$pid" &
-            PORT=$((PORT+1))
+            PORT=$((PORT + 1))
         done
         wait $!
     else
