@@ -167,6 +167,20 @@ Add the content to the `.vscode/` setup files:
 
 ```
 
+Add the gdb script `mpi.gdb` to your `.vscode` folder:
+
+```gdb
+# This is a comment in the GDB script file
+
+# Set a breakpoint
+break gdb_breakpoint
+commands
+silent
+set attached = 1
+continue
+end
+```
+
 ### Running
 
 * First you need to build the program:
@@ -178,6 +192,6 @@ Add the content to the `.vscode/` setup files:
     > 3. Choose the PID of the thread you wanna debug to
     > 4. Set a breakpoint where you want to start from
     > 5. Vscode command pallet `> Workspaces: Duplicate As Workspace in New Window`
-    > 6. Repeat the process [1-3] (you can also set a breakpoint to this thread)
-    > remember to do so before running debugger, otherwise the execution will flow.
+    > 6. Repeat the process [1-3] (you can also set a breakpoint to this thread -
+    > remember to do so before running debugger, otherwise the execution will flow).
     > 7. That's it! Happy bug smash!
