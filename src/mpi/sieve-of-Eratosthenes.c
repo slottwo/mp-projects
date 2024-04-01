@@ -37,9 +37,8 @@ int main(int argc, char *argv[])
 #ifdef DEBUG // Compile with `-D DEBUG`
 	// Waits debugger attachment
 	{
-		setup_debug();
 		int attached = 0;
-		while (!(attached || is_debugger_attached())) {
+		while (!attached) {
 			// Define a label using GDB-specific assembly command
 			__asm__("gdb_breakpoint:");
 			sleep(3);
