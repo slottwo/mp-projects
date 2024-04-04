@@ -33,7 +33,7 @@ if [ ! -d ".bin" ]; then
 fi
 cd .bin
 
-if [ "$1" == "sieve-of-Eratosthenes" ]; then
+if [ "$1" == "sieve-of-Eratosthenes" ] || [ "$1" == "sieve-of-Sundaram" ] || [ "$1" == "sieve-of-Sundaram-cluster" ] ; then
     if [ "$3" ] && [ "$3" == "-D" ]; then
         mpicc -c ../src/mpi/$1.c -lm -g -fdiagnostics-color=always -D DEBUG
         mpicc -o program.out "$1".o ./lib/*.o -lm -g
