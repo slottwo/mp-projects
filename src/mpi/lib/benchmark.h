@@ -16,6 +16,9 @@ void set_group_as_serial(int source, BenchmarkInfo benchmark);
 /* Start the benchmark timer register from base execution. */
 BenchmarkInfo benchmark_start(const char *, int rank, bool dynamic);
 
+/* Start the benchmark, receives base execution timings. */
+BenchmarkInfo benchmark_start_from(const char *name, int rank, bool dynamic, double start_time, double end_time);
+
 /* Starts next benchmark register. */
 double benchmark_next(const char *, BenchmarkInfo);
 
