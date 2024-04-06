@@ -6,7 +6,7 @@
 /** @brief 1 GB */
 #define _GB 1073741824
 
-#define N 1000000
+#define N _GB
 
 int main(int argc, char const *argv[])
 {
