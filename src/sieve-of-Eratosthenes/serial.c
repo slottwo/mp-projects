@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "lib/benchmark.h"
+#include "../lib/benchmark.h"
 
 /** @brief 1 GB */
 #define _GB 1073741824
