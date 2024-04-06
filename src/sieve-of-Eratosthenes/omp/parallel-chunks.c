@@ -33,9 +33,8 @@ int main(int argc, char const *argv[])
                 non_primes[i] = true;
 
             do
-            {
                 k++;
-            } while (non_primes[k]);
+            while (non_primes[k]);
         }
     }
 
