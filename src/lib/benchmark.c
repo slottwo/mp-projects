@@ -51,6 +51,11 @@ struct benchmark_info {
     int rank;
     bool dynamic;
     Info current;
+    bool has_serial;
+    struct {
+        double start;
+        double end;
+    } serial_time;
 };
 static unsigned using_groups = 0;
 
@@ -80,7 +85,7 @@ static Info _create_info(const char *name)
     return info;
 }
 
-BenchmarkInfo benchmark_start(const char *name, int rank, bool dynamic)
+BenchmarkInfo _benchmark_start(const char *name, int rank, bool dynamic)
 {
     static const char *DEFAULT = "Default";
 
@@ -95,6 +100,7 @@ BenchmarkInfo benchmark_start(const char *name, int rank, bool dynamic)
     benchmark->dynamic = dynamic;
     benchmark->rank = rank;
     benchmark->serial = NULL;
+    benchmark->has_serial = true;
 
     // Force group creation
     struct group_node *group = emalloc(sizeof(struct group_node));
@@ -106,6 +112,20 @@ BenchmarkInfo benchmark_start(const char *name, int rank, bool dynamic)
     benchmark->current = _create_info(name);
     group->list = benchmark->current;
 
+    return benchmark;
+}
+
+BenchmarkInfo benchmark_start(const char *name, int rank, bool dynamic)
+{
+    return _benchmark_start(name, rank, dynamic);
+}
+
+BenchmarkInfo benchmark_start_from(const char *name, int rank, bool dynamic, double start_time, double end_time)
+{
+    BenchmarkInfo benchmark = _benchmark_start(name, rank, dynamic);
+    benchmark->has_serial = false;
+    benchmark->serial_time.start = start_time;
+    benchmark->serial_time.end = end_time;
     return benchmark;
 }
 
@@ -236,7 +256,9 @@ static void _benchmark_sequence(int wsize, bool clear, Info info, BenchmarkInfo 
     double serial_time;
 
     if (benchmark->rank == ROOT) {
-        double time = head->end_time - head->start_time;
+        double time = (!benchmark->has_serial) \
+                ? benchmark->serial_time.start - benchmark->serial_time.end \
+                : head->end_time - head->start_time;
         MPI_Bcast(&time, 1, MPI_DOUBLE, ROOT, MPI_COMM_WORLD);
     }
     else
