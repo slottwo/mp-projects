@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
+#include <mpi.h>
 
 #include "../lib/benchmark.h"
 
@@ -35,6 +35,14 @@ int main(int argc, char *argv[])
     }
 #endif
 
+    /* MPI.h Initialization */
+    // int wsize, rank;
+    MPI_Init(&argc, &argv);
+    // MPI_Comm_size(MPI_COMM_WORLD, &wsize);
+    // MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    double _sync = MPI_Wtime();
+    // MPI_Status status;
+
     /* Parse arguments */
     bool dynamic = false;
     size_t n = N;
@@ -55,13 +63,12 @@ int main(int argc, char *argv[])
                 }
     BenchmarkInfo benchmark = NULL;
 
-    FILE *log;
-    time_t *t;
+    FILE *tmp;
 
     // fprintf(stderr, "\033[36m"
     //                 "Setup\033[m"
     //                 "\t[%d]\n",
-    //         N);
+    //         n);
 
     bool *non_primes = (bool *)calloc(N, sizeof(bool));
     non_primes[0] = true;
@@ -71,14 +78,14 @@ int main(int argc, char *argv[])
     //                 "\033[33m"
     //                 "Loading\n\033[m");
 
-    log = fopen(".tmp", "w");
-    fprintf(log, "%d\n", time(t));
-    fclose(log);
+    tmp = fopen(".tmp", "w");
+    fprintf(tmp, "%f\n", MPI_Wtime());
+    // fclose(tmp);
 
     int k = 2;
-    while (!(k * k > N))
+    while (!(k * k > n))
     {
-        for (int i = k * k; i < N; i += k)
+        for (int i = k * k; i < n; i += k)
             non_primes[i] = true;
 
         do
@@ -86,9 +93,9 @@ int main(int argc, char *argv[])
         while (non_primes[k]);
     }
 
-    log = fopen(".tmp", "a+");
-    fprintf(log, "%d", time(t));
-    fclose(log);
+    // tmp = fopen(".tmp", "a+");
+    fprintf(tmp, "%f", MPI_Wtime());
+    fclose(tmp);
 
     // fprintf(stderr, "\33[2K\033[A\r"
     //                 "\033[32m"
