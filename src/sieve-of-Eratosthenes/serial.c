@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "../lib/benchmark.h"
 
@@ -54,20 +55,25 @@ int main(int argc, char *argv[])
                 }
     BenchmarkInfo benchmark = NULL;
 
-    fprintf(stderr, "\033[36m"
-                    "Setup\033[m"
-                    "\t[%d]\n",
-            N);
+    FILE *log;
+    time_t *t;
+
+    // fprintf(stderr, "\033[36m"
+    //                 "Setup\033[m"
+    //                 "\t[%d]\n",
+    //         N);
 
     bool *non_primes = (bool *)calloc(N, sizeof(bool));
     non_primes[0] = true;
     non_primes[1] = true;
 
-    fprintf(stderr, "\33[2K\033[A\r"
-                    "\033[33m"
-                    "Loading\n\033[m");
+    // fprintf(stderr, "\33[2K\033[A\r"
+    //                 "\033[33m"
+    //                 "Loading\n\033[m");
 
-    benchmark = benchmark_start("MPI - Iterative Messages", 0, true);
+    log = fopen(".tmp", "w");
+    fprintf(log, "%d\n", time(t));
+    fclose(log);
 
     int k = 2;
     while (!(k * k > N))
@@ -80,14 +86,13 @@ int main(int argc, char *argv[])
         while (non_primes[k]);
     }
 
-    fprintf(stderr, "\33[2K\033[A\r"
-                    "\033[32m"
-                    "Done   \n\033[m");
+    log = fopen(".tmp", "a+");
+    fprintf(log, "%d", time(t));
+    fclose(log);
 
-    benchmark_stop(benchmark);
-
-    benchmark_save(1, benchmark);
-    benchmark_show(1, true, benchmark);
+    // fprintf(stderr, "\33[2K\033[A\r"
+    //                 "\033[32m"
+    //                 "Done   \n\033[m");
 
     free(non_primes);
 
