@@ -9,10 +9,10 @@
  *
  */
 
-#include <mpi.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <mpi.h>
 
 #include "../../lib/benchmark.h"
 
@@ -77,8 +77,6 @@ int main(int argc, char *argv[])
 				}
 	BenchmarkInfo benchmark = NULL;
 
-	/* Start */
-
 	bool *NON_PRIMES;
 	if (rank == ROOT)
 		NON_PRIMES = (bool *)malloc(N * 1UL);
@@ -87,7 +85,9 @@ int main(int argc, char *argv[])
 	non_primes[0] = true;
 	non_primes[1] = true;
 
-	benchmark = benchmark_start("MPI - Single Message", ROOT, dynamic);
+	benchmark = benchmark_start_from_file("MPI - Single Message", ROOT, dynamic);
+
+	/* Start */
 
 	int i, k = 2 + rank;
 	while (!(k * k > N))

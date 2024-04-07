@@ -9,10 +9,10 @@
  *
  */
 
-#include <mpi.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <mpi.h>
 
 #include "../../lib/benchmark.h"
 
@@ -77,14 +77,14 @@ int main(int argc, char *argv[])
                 }
     BenchmarkInfo benchmark = NULL;
 
-    /* Start */
-
     bool *NON_PRIMES = (bool *)calloc(N, sizeof(bool));
     bool *non_primes = (bool *)calloc(N, sizeof(bool));
     non_primes[0] = true;
     non_primes[1] = true;
 
-    benchmark = benchmark_start("MPI - Iterative Messages", ROOT, dynamic);
+    benchmark = benchmark_start_from_file("MPI - Iterative Messages", ROOT, dynamic);
+
+    /* Start */
 
     for (int i = 4; i < N; i += 2)
         non_primes[i] = true;
