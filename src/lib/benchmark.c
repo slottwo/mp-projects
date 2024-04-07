@@ -137,19 +137,19 @@ BenchmarkInfo benchmark_start_from(const char *name, int rank, bool dynamic, dou
 
 BenchmarkInfo benchmark_start_from_file(const char *name, int rank, bool dynamic)
 {
+    double t1, t2;
+    
+    FILE *file = fopen(".tmp", "r");
+    if (file == NULL)
+        exit(EXIT_FAILURE);
 
-    double start_time, end_time;
+    fscanf(file, "%lf", &t1);
+    fscanf(file, "%lf", &t2);
+    fclose(file);
 
-    FILE *tmp;
+    printf("%f\n%f\n", t1, t2);
 
-    fopen(".tmp", "r");
-    if (tmp == NULL)
-        exit(1);
-
-    fscanf(tmp, "%f\n%f", &end_time, &end_time);
-    fclose(tmp);
-
-    BenchmarkInfo benchmark = benchmark_start_from(name, rank, dynamic, start_time, end_time);
+    BenchmarkInfo benchmark = benchmark_start_from(name, rank, dynamic, t1, t2);
 }
 
 BenchmarkInfo benchmark_group_start(const char *name, const char *first, int rank, bool dynamic)
