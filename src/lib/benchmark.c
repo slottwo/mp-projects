@@ -147,8 +147,6 @@ BenchmarkInfo benchmark_start_from_file(const char *name, int rank, bool dynamic
     fscanf(file, "%lf", &t2);
     fclose(file);
 
-    printf("%f\n%f\n", t1, t2);
-
     BenchmarkInfo benchmark = benchmark_start_from(name, rank, dynamic, t1, t2);
 }
 
