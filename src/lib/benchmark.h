@@ -19,6 +19,9 @@ BenchmarkInfo benchmark_start(const char *, int rank, bool dynamic);
 /* Start the benchmark, receives base execution timings. */
 BenchmarkInfo benchmark_start_from(const char *name, int rank, bool dynamic, double start_time, double end_time);
 
+/* Start the benchmark, gets base execution timings from `.tmp` file */
+BenchmarkInfo benchmark_start_from_file(const char *name, int rank, bool dynamic);
+
 /* Starts next benchmark register. */
 double benchmark_next(const char *, BenchmarkInfo);
 
