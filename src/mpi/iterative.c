@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <mpi.h>
 
-#include "../../lib/benchmark.h"
+#include "src/lib/benchmark.h"
 
 /** @brief MPI main process */
 #define ROOT 0

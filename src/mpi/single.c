@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <mpi.h>
 
-#include "../../lib/benchmark.h"
+#include "../lib/benchmark.h"
 
 /** @brief MPI main process */
 #define ROOT 0
@@ -107,8 +107,8 @@ int main(int argc, char *argv[])
 
 	benchmark_stop(benchmark);
 
-	free(NON_PRIMES);
 	free(non_primes);
+	free(NON_PRIMES);
 
 	benchmark_save(wsize, benchmark);
 	benchmark_show(wsize, true, benchmark);

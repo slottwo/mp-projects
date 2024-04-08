@@ -4,7 +4,7 @@
 #include <omp.h>
 #include <mpi.h>
 
-#include "../../lib/benchmark.h"
+#include "../lib/benchmark.h"
 
 /** @brief MPI main process */
 #define ROOT 0
@@ -104,6 +104,5 @@ int main(int argc, char const *argv[])
     }
 
     MPI_Finalize();
-
     return 0;
 }

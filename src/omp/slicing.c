@@ -4,7 +4,7 @@
 #include <mpi.h>
 #include <omp.h>
 
-#include "../../lib/benchmark.h"
+#include "../lib/benchmark.h"
 
 /** @brief MPI main process */
 #define ROOT 0

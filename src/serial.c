@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <mpi.h>
 
-#include "../lib/benchmark.h"
+#include "lib/benchmark.h"
 
 /** @brief 1 GB */
 #define _GB 1073741824
@@ -36,12 +36,8 @@ int main(int argc, char *argv[])
 #endif
 
     /* MPI.h Initialization */
-    // int wsize, rank;
     MPI_Init(&argc, &argv);
-    // MPI_Comm_size(MPI_COMM_WORLD, &wsize);
-    // MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     double _sync = MPI_Wtime();
-    // MPI_Status status;
 
     /* Parse arguments */
     bool dynamic = false;
@@ -63,7 +59,9 @@ int main(int argc, char *argv[])
                 }
     BenchmarkInfo benchmark = NULL;
 
-    FILE *tmp;
+    printf()
+
+        FILE *tmp;
 
     // fprintf(stderr, "\033[36m"
     //                 "Setup\033[m"
