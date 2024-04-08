@@ -1,0 +1,9 @@
+#!/bin/bash
+
+mpicc -c src/lib/benchmark.c
+mpicc -c src/mpi/iterative.c
+mpicc -c src/mpi/single.c
+mpicc -c src/omp/slicing.c
+mpicc -c src/omp/for-auto.c
+mpicc -c src/omp/for-auto.c
+mpicc -c src/omp/for-auto.c
