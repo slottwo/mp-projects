@@ -20,8 +20,6 @@ gcc -fopenmp sieve/Eratosthenes/src/omp/slicing.c -o .bin/exe/slicing
 mpicc sieve/Eratosthenes/src/mpi/iterative.c -o .bin/exe/iterative
 mpicc sieve/Eratosthenes/src/mpi/single.c -o .bin/exe/single
 
-exit
-
 while [ $nexecs -ne 0 ]; do
 
   let nexecs--
