@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     MPI_Status status;
     BenchmarkInfo benchmark = NULL;
 
-    size_t N = _GB;
+    size_t N = _GB/2048;
 
     /* Parse arguments */
     if (argc > 1)
@@ -42,18 +42,17 @@ int main(int argc, char *argv[])
                 if (--argc)
                     N = atol(*++argv);
 
-    // TODO -> get serial time
-    //FILE *_fp = fopen("", "r");
-    //double serial_start, serial_end;
-    //benchmark = benchmark_start_from("MPI iterative", rank, false, serial_start, serial_end);
+    FILE *_fp = efopen(".tmp", "r");
+    double serial_start, serial_end;
+    fscanf(_fp, "%f %f\n", &serial_start, &serial_end);
+    fclose(_fp);
 
     bool *NON_PRIMES = (bool *)calloc(N, sizeof(bool));
     bool *non_primes = (bool *)calloc(N, sizeof(bool));
     non_primes[0] = true;
     non_primes[1] = true;
 
-    benchmark = benchmark_start("MPI iterative", rank, false);
-    clock_t clk = clock();
+    benchmark = benchmark_start_from("MPI Iterative Messages", rank, false, serial_start, serial_end);
 
     /* Start */
 
@@ -79,33 +78,11 @@ int main(int argc, char *argv[])
     /* End */
     benchmark_stop(benchmark);
 
-    if (rank == ROOT)
-    {
-        clk = clock() - clk;
-
-        FILE *log;
-        log = fopen("bin/log/mpi_iterative", "a+");
-        if (log == NULL)
-            exit(1);
-        fprintf(log, "%d %d\n", N, clk);
-        fclose(log);
-
-        // FILE *out;
-        // out = fopen("bin/out/mpi_iterative", "w");
-        // if (out == NULL)
-        //     exit(1);
-        // for (i = 0; i < _L; i++)
-        //     if (!non_primes[i])
-        //         fprintf(out, "%d ", i);
-        // fclose(out);
-
-        free(NON_PRIMES);
-    }
-
     free(non_primes);
+    free(NON_PRIMES);
 
-	benchmark_save_to(wsize, benchmark, "iterative-trace.json");
-	benchmark_show(wsize, true, benchmark);
+    benchmark_save_to(wsize, benchmark, "iterative-trace.json");
+    benchmark_show(wsize, true, benchmark);
 
     MPI_Finalize();
 
