@@ -72,27 +72,32 @@ int main(int argc, char *argv[])
 
     /* End */
 
-    clk = clock() - clk;
+    if (rank == ROOT)
+    {
+        clk = clock() - clk;
 
-    FILE *log;
-    log = fopen("bin/log/serial", "a+");
-    if (log == NULL)
-        exit(1);
-    fprintf(log, "%d %d\n", N, clk);
-    fclose(log);
+        FILE *log;
+        log = fopen("bin/log/mpi_iterative", "a+");
+        if (log == NULL)
+            exit(1);
+        fprintf(log, "%d %d\n", N, clk);
+        fclose(log);
 
-    // FILE *out;
-    // out = fopen("bin/out/serial", "w");
-    // if (out == NULL)
-    //     exit(1);
-    // for (i = 0; i < _L; i++)
-    //     if (!non_primes[i])
-    //         fprintf(out, "%d ", i);
-    // fclose(out);
+        // FILE *out;
+        // out = fopen("bin/out/mpi_iterative", "w");
+        // if (out == NULL)
+        //     exit(1);
+        // for (i = 0; i < _L; i++)
+        //     if (!non_primes[i])
+        //         fprintf(out, "%d ", i);
+        // fclose(out);
 
-    free(NON_PRIMES);
+        free(NON_PRIMES);
+    }
+
     free(non_primes);
 
     MPI_Finalize();
+
     return 0;
 }
