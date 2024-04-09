@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	if (rank == ROOT)
 	{
 		clk = clock() - clk;
-		t = MPI_Wtime();
+		t = MPI_Wtime() - t;
 
 		FILE *log;
 		log = fopen("log/mpi_single", "a");

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-N=10000 # input
-nthr=3    # num threads
-npcs=2    # num process
+N=1073741824 # input
+nthr=5    # num threads
+npcs=5    # num process
 nexecs=10 # num off executions
 cluster=0 # if connected
 
