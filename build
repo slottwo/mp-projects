@@ -8,29 +8,29 @@ cluster=0
 
 module load mpi
 
-mkdir -p bin/exe bin/log bin/out
+mkdir -p .bin/exe .bin/log .bin/out
 
-gcc src/serial.c -o bin/exe/serial
+gcc src/serial.c -o .bin/exe/serial
 
-gcc -fopenmp src/omp/for_auto.c -o bin/exe/for_auto
-gcc -fopenmp src/omp/for_dynamic.c -o bin/exe/for_dynamic
-gcc -fopenmp src/omp/for_static.c -o bin/exe/for_static
-gcc -fopenmp src/omp/slicing.c -o bin/exe/slicing
+gcc -fopenmp src/omp/sieve/Eratosthenes/for_auto.c -o .bin/exe/for_auto
+gcc -fopenmp src/omp/sieve/Eratosthenes/for_dynamic.c -o .bin/exe/for_dynamic
+gcc -fopenmp src/omp/sieve/Eratosthenes/for_static.c -o .bin/exe/for_static
+gcc -fopenmp src/omp/sieve/Eratosthenes/slicing.c -o .bin/exe/slicing
 
-mpicc src/mpi/iterative.c -o bin/exe/iterative
-mpicc src/mpi/single.c -o bin/exe/single
+mpicc src/mpi/sieve/Eratosthenes/iterative.c -o .bin/exe/iterative
+mpicc src/mpi/sieve/Eratosthenes/single.c -o .bin/exe/single
 
 while [ $nexecs -ne 0 ]
 do
 
 let nexecs--
 
-./bin/exe/serial -N $N
+./.bin/exe/serial -N $N
 
-./bin/exe/for_auto -N $N -p $nthr
-./bin/exe/for_dynamic -N $N -p $nthr
-./bin/exe/for_static -N $N -p $nthr
-./bin/exe/slicing -N $N -p $nthr
+./.bin/exe/for_auto -N $N -p $nthr
+./.bin/exe/for_dynamic -N $N -p $nthr
+./.bin/exe/for_static -N $N -p $nthr
+./.bin/exe/slicing -N $N -p $nthr
 
 if [ $cluster -eq 1 ]; then
     if [ $((N + 1024 > 1073741824)) -eq 1 ]; then
@@ -38,11 +38,11 @@ if [ $cluster -eq 1 ]; then
     fi
     MEM=$((N + 1024))B
     salloc --nodes 7 --ntasks $npcs --mem $MEM sh
-    mpiexec ./bin/exe/iterative -N $N
-    mpiexec ./bin/exe/single -N $N
+    mpiexec ./.bin/exe/iterative -N $N
+    mpiexec ./.bin/exe/single -N $N
 else
-    mpiexec -np $npcs ./bin/exe/iterative -N $N
-    mpiexec -np $npcs ./bin/exe/single -N $N
+    mpiexec -np $npcs ./.bin/exe/iterative -N $N
+    mpiexec -np $npcs ./.bin/exe/single -N $N
 fi
 
 done
