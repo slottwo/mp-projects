@@ -1,113 +1,79 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 #include <omp.h>
-#include <mpi.h>
-
-#include "../lib/benchmark.h"
-
-/** @brief MPI main process */
-#define ROOT 0
 
 /** @brief 1 GB */
 #define _GB 1073741824
 
-#ifdef DEBUG
-#define N _GB / 1024
-#else
-#define N _GB
-#endif
-
-#ifdef DEBUG
-#include "lib/utils.h"
-#include <unistd.h> // UNIX only
-#endif
+/** @brief Max numbers on output file */
+#define _L ((N > 10000) ? N : 10000)
 
 int main(int argc, char const *argv[])
 {
+    size_t N = _GB;
+    int NTHREADS = omp_get_num_procs() / 2;
 
-#ifdef DEBUG // Compile with `-D DEBUG`
-    // Waits debugger attachment
+    /* Parse arguments */
+    if (argc > 1)
+        while (--argc)
+            if (*(*++argv)++ == '-')
+                switch (**argv)
+                {
+                case 'n':
+                    if (--argc)
+                        N = atol(*++argv);
+                    break;
+                case 'p':
+                    if (--argc)
+                        NTHREADS = atol(*++argv);
+                    break;
+                default:
+                    break;
+                }
+
+    bool *non_primes = (bool *)calloc(N, sizeof(bool));
+    non_primes[0] = true;
+    non_primes[1] = true;
+
+    clock_t clk = clock();
+
+    /* Start */
+
+    int k = 2;
+    while (!(k * k > N))
     {
-        int attached = 0;
-        while (!attached)
-        {
-            // Define a label using GDB-specific assembly command
-            __asm__("gdb_breakpoint:");
-            sleep(3);
-        }
-    }
-#endif
-
-    /* MPI.h Initialization */
-    int wsize, rank;
-    MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &wsize);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    double _sync = MPI_Wtime();
-    MPI_Status status;
-
-    if (rank == ROOT)
-    {
-
-        /* Parse arguments */
-        bool dynamic = false;
-        size_t n = N;
-        if (argc > 1)
-            while (--argc)
-                if (*(*++argv)++ == '-')
-                    switch (**argv)
-                    {
-                    case 'd':
-                        dynamic = true;
-                        break;
-                    case 'n':
-                        if (--argc)
-                            n = atol(*++argv);
-                        break;
-                    default:
-                        break;
-                    }
-        BenchmarkInfo benchmark = NULL;
-
-        // int NTHREADS = omp_get_num_procs() / 2;
-        int NTHREADS = wsize;
-
-        bool *non_primes = (bool *)calloc(n, sizeof(bool));
-        non_primes[0] = true;
-        non_primes[1] = true;
-
-        benchmark = benchmark_start_from_file("OMP - Slicing", ROOT, dynamic);
-
-        /* Start */
-
-        bool *non_primes = (bool *)calloc(n, sizeof(bool));
-        non_primes[0] = true;
-        non_primes[1] = true;
-
-        int k = 2;
-        while (!(k * k > n))
-        {
 #pragma omp parallel for schedule(auto) num_threads(NTHREADS)
-            for (int i = k * k; i < n; i += k)
-                non_primes[i] = true;
+        for (int i = k * k; i < N; i += k)
+            non_primes[i] = true;
 
-            do
-                k++;
-            while (non_primes[k]);
-        }
-
-        /* End */
-
-        benchmark_stop(benchmark);
-
-        free(non_primes);
-
-        benchmark_save(wsize, benchmark);
-        benchmark_show(wsize, true, benchmark);
+        do
+            k++;
+        while (non_primes[k]);
     }
 
-    MPI_Finalize();
+    /* End */
+
+    clk = clock() - clk;
+
+    FILE *log;
+    log = fopen("bin/log/serial", "a+");
+    if (log == NULL)
+        exit(1);
+    fprintf(log, "%d %d\n", N, clk);
+    fclose(log);
+
+    // FILE *out;
+    // out = fopen("bin/out/serial", "w");
+    // if (out == NULL)
+    //     exit(1);
+    // for (i = 0; i < _L; i++)
+    //     if (!non_primes[i])
+    //         fprintf(out, "%d ", i);
+    // fclose(out);
+
+    free(non_primes);
 
     return 0;
 }

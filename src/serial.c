@@ -6,13 +6,14 @@
 /** @brief 1 GB */
 #define _GB 1073741824
 
+/** @brief Max numbers on output file */
 #define _L ((N > 10000) ? N : 10000)
 
 int main(int argc, char *argv[])
 {
-    /* Parse arguments */
-    bool dynamic = false;
     size_t N = _GB;
+
+    /* Parse arguments */
     if (argc > 1)
         while (--argc)
             if (*(*++argv)++ == '-' && **argv == 'N')
@@ -32,10 +33,9 @@ int main(int argc, char *argv[])
     //                 "\033[33m"
     //                 "Loading\n\033[m");
 
-    int i, k = 2;
-
     clock_t clk = clock();
 
+    int i, k = 2;
     while (!(k * k > N))
     {
         for (i = k * k; i < N; i += k)
