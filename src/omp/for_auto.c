@@ -21,7 +21,7 @@ int main(int argc, char const *argv[])
             if (*(*++argv)++ == '-')
                 switch (**argv)
                 {
-                case 'n':
+                case 'N':
                     if (--argc)
                         N = atol(*++argv);
                     break;
@@ -58,14 +58,14 @@ int main(int argc, char const *argv[])
     clk = clock() - clk;
 
     FILE *log;
-    log = fopen("bin/log/serial", "a+");
+    log = fopen("bin/log/for_auto", "a+");
     if (log == NULL)
         exit(1);
-    fprintf(log, "%d %d\n", N, clk);
+    fprintf(log, "%d %d %d\n", N, clk, NTHREADS);
     fclose(log);
 
     // FILE *out;
-    // out = fopen("bin/out/serial", "w");
+    // out = fopen("bin/out/for_auto", "w");
     // if (out == NULL)
     //     exit(1);
     // for (i = 0; i < _L; i++)
