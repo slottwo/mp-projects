@@ -1,14 +1,14 @@
 #!/bin/bash
 
-N=10000   # input
-nthr=2    # num threads
+N=1000000 # input
+nthr=3    # num threads
 npcs=2    # num process
-nexecs=1  # num off executions
+nexecs=10 # num off executions
 cluster=0 # if connected
 
 # module load mpi
 
-mkdir -p .bin/exe .bin/log .bin/out
+mkdir -p .bin log out
 
 gcc sieve/Eratosthenes/src/serial.c -o .bin/exe/serial
 

@@ -7,7 +7,7 @@
 #define _GB 1073741824
 
 /** @brief Max numbers on output file */
-#define _L ((N > 10000) ? N : 10000)
+#define _L ((N > 100000) ? N : 100000)
 
 int main(int argc, char *argv[])
 {
@@ -40,19 +40,23 @@ int main(int argc, char *argv[])
     clk = clock() - clk;
 
     FILE *log;
-    log = fopen(".bin/log/serial", "a");
+    log = fopen("log/serial", "a");
     if (log == NULL)
         exit(1);
-    fprintf(log, "%d %d\n", N, clk);
+    fprintf(log, "%d %d 1 %lf\n", N, clk, (double)clk / CLOCKS_PER_SEC);
     fclose(log);
 
     // FILE *out;
-    // out = fopen(".bin/out/serial", "w");
+    // out = fopen("out/serial", "w");
     // if (out == NULL)
     //     exit(1);
     // for (i = 0; i < _L; i++)
     //     if (!non_primes[i])
-    //         fprintf(out, "%d ", i);
+    //     {
+    //         fprintf(out, "%-8d ", i);
+    //         if (i % 20 == 19)
+    //             fprintf(out, "\n");
+    //     }
     // fclose(out);
 
     free(non_primes);

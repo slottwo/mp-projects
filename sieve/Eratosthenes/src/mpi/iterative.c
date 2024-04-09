@@ -47,8 +47,14 @@ int main(int argc, char *argv[])
     non_primes[0] = true;
     non_primes[1] = true;
 
-    clock_t clk = clock();
-    double t = MPI_Wtime();
+    clock_t clk;
+    double t;
+
+    if (rank == ROOT)
+    {
+        clk = clock();
+        t = MPI_Wtime();
+    }
 
     /* Start */
 
@@ -76,22 +82,26 @@ int main(int argc, char *argv[])
     if (rank == ROOT)
     {
         clk = clock() - clk;
-        double t = MPI_Wtime();
+        t = MPI_Wtime();
 
         FILE *log;
-        log = fopen(".bin/log/mpi_iterative", "a");
+        log = fopen("log/mpi_iterative", "a");
         if (log == NULL)
             exit(1);
         fprintf(log, "%d %d %d %lf\n", N, clk, wsize, t);
         fclose(log);
 
         // FILE *out;
-        // out = fopen(".bin/out/mpi_iterative", "w");
+        // out = fopen("out/mpi_iterative", "w");
         // if (out == NULL)
         //     exit(1);
         // for (i = 0; i < _L; i++)
         //     if (!non_primes[i])
-        //         fprintf(out, "%d ", i);
+        //     {
+        //         fprintf(out, "%-8d ", i);
+        //         if (i % 20 == 19)
+        //             fprintf(out, "\n");
+        //     }
         // fclose(out);
 
         free(NON_PRIMES);
