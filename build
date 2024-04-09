@@ -1,8 +1,9 @@
 #!/bin/bash
 
-N=1024 # input
+N=10000 # input
 nthr=2 # num threads
 npcs=2 # num process
+nexecs=5 # num off executions
 cluster=0
 
 module load mpi
@@ -19,6 +20,11 @@ gcc -fopenmp src/omp/slicing.c -o bin/exe/slicing
 mpicc src/mpi/iterative.c -o bin/exe/iterative
 mpicc src/mpi/single.c -o bin/exe/single
 
+while [ $nexecs -ne 0 ]
+do
+
+let nexecs--
+
 ./bin/exe/serial -N $N
 
 ./bin/exe/for_auto -N $N -p $nthr
@@ -27,14 +33,16 @@ mpicc src/mpi/single.c -o bin/exe/single
 ./bin/exe/slicing -N $N -p $nthr
 
 if [ $cluster -eq 1 ]; then
-    # if [ $((N + 1024 > 1073741824)) -eq 1 ]; then
-    #     N=1073741824
-    # fi
-    # MEM=$((N + 1024))B
-    # salloc --nodes 7 --ntasks $npcs --mem $MEM sh
-    # mpiexec ./bin/exe/iterative -N $N
-    # mpiexec ./bin/exe/single -N $N
+    if [ $((N + 1024 > 1073741824)) -eq 1 ]; then
+        N=1073741824
+    fi
+    MEM=$((N + 1024))B
+    salloc --nodes 7 --ntasks $npcs --mem $MEM sh
+    mpiexec ./bin/exe/iterative -N $N
+    mpiexec ./bin/exe/single -N $N
 else
     mpiexec -np $npcs ./bin/exe/iterative -N $N
     mpiexec -np $npcs ./bin/exe/single -N $N
 fi
+
+done
