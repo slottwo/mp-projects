@@ -122,7 +122,6 @@ int main(int argc, char** argv)
 
     // TODO -> Use benchmark group to measure time of AllGather
     MPI_Allgather(primes, local_N, MPI_C_BOOL, all_primes, local_N, MPI_C_BOOL, MPI_COMM_WORLD);
-    
 
     if (rank == 0) {
         // Print prime numbers

@@ -1,8 +1,9 @@
 #!/bin/bash
 
 if [ ! "$1" ]; then
-    printf "\33[31m""MPI file name expected. Options above:\n\33[33m" >&2
-    cd ./src/mpi/ && ls *.c | sed -e 's/\.c$//' >&2 && cd ../../
+    printf "\33[31m""MPI file path expected. Options above:\n\33[33m" >&2
+    #find . -type f -wholename "./src/mpi/*.c"
+    cd ./src/mpi/ && find . -type f -wholename "*.c" && cd ../../
     printf "\33[m"
     exit 1
 fi
@@ -37,17 +38,18 @@ cd .bin
 COMPILER=""
 
 case "$1" in
-  "sieve-of-Eratosthenes" | "sieve-of-Sundaram" | "sieve-of-Sundaram-cluster" | "sfs" | "sun")
+  "sieve/Eratosthenes/"*".c" | "sieve/Sundaram/"*".c")
     COMPILER=mpicc
   ;;
-  "sieve-of-Sundaram-bitfull")
+  "sieve/Eratosthenes/"*".cpp" | "sieve/Sundaram/"*".cpp")
     COMPILER=mpicxx
   ;;
   *)
-    mpicc -o program.out ../src/mpi/$1.c -lm
+    mpicc -o program.out ../src/mpi/$1 -lm
   ;;
 esac
 
+PATH_NO_EXT="${1%.*}"
 if [ "$COMPILER" ] ; then
     if [ "$3" ] && [ "$3" == "-D" ] ; then
         if [ "$(cat /proc/sys/kernel/yama/ptrace_scope)" != "0" ] ; then
@@ -60,11 +62,11 @@ if [ "$COMPILER" ] ; then
             esac
         fi
 
-        $COMPILER -c ../src/mpi/$1.c -lm -g -fdiagnostics-color=always -D DEBUG
-        $COMPILER -o program.out "$1".o ./lib/*.o -lm -g
+        $COMPILER -c ../src/mpi/"$1" -lm -g -fdiagnostics-color=always -D DEBUG
+        $COMPILER -o program.out "$PATH_NO_EXT".o ./lib/*.o -lm -g
     else
-        $COMPILER -c ../src/mpi/$1.c -lm
-        $COMPILER -o program.out "$1".o ./lib/*.o -lm
+        $COMPILER -c ../src/mpi/"$1" -lm
+        $COMPILER -o program.out "$PATH_NO_EXT".o ./lib/*.o -lm
     fi
 fi
 
