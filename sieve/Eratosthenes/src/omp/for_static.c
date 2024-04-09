@@ -37,6 +37,7 @@ int main(int argc, char const *argv[])
     non_primes[0] = true;
     non_primes[1] = true;
 
+    double t = omp_get_wtime();
     clock_t clk = clock();
 
     /* Start */
@@ -56,12 +57,13 @@ int main(int argc, char const *argv[])
     /* End */
 
     clk = clock() - clk;
+    t = omp_get_wtime() - t;
 
     FILE *log;
     log = fopen(".bin/log/omp_for_static", "a");
     if (log == NULL)
         exit(1);
-    fprintf(log, "%d %d %d\n", N, clk, NTHREADS);
+    fprintf(log, "%d %d %d %lf\n", N, clk, NTHREADS, t);
     fclose(log);
 
     // FILE *out;
