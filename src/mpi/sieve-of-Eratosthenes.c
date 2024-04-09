@@ -10,6 +10,7 @@
  */
 
 #include "lib/benchmark.h"
+#include "lib/utils.h"
 #include <mpi.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -25,15 +26,14 @@
 #endif
 
 #define ROOT 0 // MPI main process
+#define COLS 20 // Number of cols in the output file
 
 #ifdef DEBUG
-#include "lib/utils.h"
 #include <unistd.h> // UNIX only
 #endif
 
 int main(int argc, char *argv[])
 {
-
 #ifdef DEBUG // Compile with `-D DEBUG`
 	// Waits debugger attachment
 	{
@@ -130,6 +130,31 @@ int main(int argc, char *argv[])
 
 	/** @brief Final time stamp **/
 	benchmark_stop(benchmark);
+
+    // ROOT rank writes primes to file
+    if (rank == ROOT) {
+        // Create txt with the primes
+        FILE *fp = fopen("primes.txt", "w");
+        if (fp == NULL) {
+            fprintf(stderr, "\33[31m""Error opening file.\33[m\n");
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+
+        size_t c = 0;
+        for (int i = 0; i < n; i++) {
+            if (non_primes[i]) {
+                fprintf(fp, "%d ", 2 * i + 1);
+                c++;
+            }
+            if (c != 0 && c % COLS == 0) {
+                fprintf(fp, "\n");
+            }
+        }
+
+        fclose(fp);
+
+        fprintf(stderr, "\33[32m""primes.txt file created successfully.\33[m\n");
+    }
 
 	free(non_primes);
 

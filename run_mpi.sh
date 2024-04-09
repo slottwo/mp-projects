@@ -1,8 +1,9 @@
 #!/bin/bash
 
 if [ ! "$1" ]; then
-    printf "\33[31m""MPI file name expected. Options above:\n\33[33m" >&2
-    cd ./src/mpi/ && ls *.c | sed -e 's/\.c$//' >&2 && cd ../../
+    printf "\33[31m""MPI file path expected. Options above:\n\33[33m" >&2
+    #find . -type f -wholename "./src/mpi/*.c"
+    cd ./src/mpi/ && find . -type f -wholename "*.c" && cd ../../
     printf "\33[m"
     exit 1
 fi
@@ -33,18 +34,43 @@ if [ ! -d ".bin" ]; then
 fi
 cd .bin
 
-if [ "$1" == "sieve-of-Eratosthenes" ]; then
-    if [ "$3" ] && [ "$3" == "-D" ]; then
-        mpicc -c ../src/mpi/$1.c -lm -g -fdiagnostics-color=always -D DEBUG
-        mpicc -o program.out "$1".o ./lib/*.o -lm -g
+# Associates each file to be compiled correctly
+COMPILER=""
+
+case "$1" in
+  "sieve/Eratosthenes/"*".c" | "sieve/Sundaram/"*".c")
+    COMPILER=mpicc
+  ;;
+  "sieve/Eratosthenes/"*".cpp" | "sieve/Sundaram/"*".cpp")
+    COMPILER=mpicxx
+  ;;
+  *)
+    mpicc -o program.out ../src/mpi/$1 -lm
+  ;;
+esac
+
+PATH_NO_EXT="${1%.*}"
+if [ "$COMPILER" ] ; then
+    if [ "$3" ] && [ "$3" == "-D" ] ; then
+        if [ "$(cat /proc/sys/kernel/yama/ptrace_scope)" != "0" ] ; then
+            >&2 printf "\33[33mMake sure you have gdb process attachment permitions.\n\33[m"
+            >&2 read -p "Run echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope if not [y/N]" c
+            case "$c" in
+              "y"* | "Y"*)
+                echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
+              ;;
+            esac
+        fi
+
+        $COMPILER -c ../src/mpi/"$1" -lm -g -fdiagnostics-color=always -D DEBUG
+        $COMPILER -o program.out "$PATH_NO_EXT".o ./lib/*.o -lm -g
     else
-        mpicc -c ../src/mpi/$1.c -lm
-        mpicc -o program.out "$1".o ./lib/*.o -lm
+        $COMPILER -c ../src/mpi/"$1" -lm
+        $COMPILER -o program.out "$PATH_NO_EXT".o ./lib/*.o -lm
     fi
-else
-    mpicc -o program.out ../src/mpi/$1.c -lm
 fi
 
+# Run the compiled files in the specified mode
 N=$(($2 > 1 ? $2 : 2))
 
 if [ -f program.out ]; then
