@@ -60,14 +60,14 @@ int main(int argc, char *argv[])
     clk = clock() - clk;
 
     FILE *log;
-    log = fopen("bin/log/slicing", "a+");
+    log = fopen("bin/log/omp_slicing", "a+");
     if (log == NULL)
         exit(1);
     fprintf(log, "%d %d %d\n", N, clk, NTHREADS);
     fclose(log);
 
     // FILE *out;
-    // out = fopen("bin/out/slicing", "w");
+    // out = fopen("bin/out/omp_slicing", "w");
     // if (out == NULL)
     //     exit(1);
     // for (i = 0; i < _L; i++)
