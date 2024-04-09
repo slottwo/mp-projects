@@ -1,6 +1,6 @@
 #!/bin/bash
 
-N=1000000 # input
+N=10000 # input
 nthr=3    # num threads
 npcs=2    # num process
 nexecs=10 # num off executions
@@ -10,26 +10,26 @@ cluster=0 # if connected
 
 mkdir -p .bin log out
 
-gcc sieve/Eratosthenes/src/serial.c -o .bin/exe/serial
+gcc sieve/Eratosthenes/src/serial.c -o .bin/serial
 
-gcc -fopenmp sieve/Eratosthenes/src/omp/for_auto.c -o .bin/exe/for_auto
-gcc -fopenmp sieve/Eratosthenes/src/omp/for_dynamic.c -o .bin/exe/for_dynamic
-gcc -fopenmp sieve/Eratosthenes/src/omp/for_static.c -o .bin/exe/for_static
-gcc -fopenmp sieve/Eratosthenes/src/omp/slicing.c -o .bin/exe/slicing
+gcc -fopenmp sieve/Eratosthenes/src/omp/for_auto.c -o .bin/for_auto
+gcc -fopenmp sieve/Eratosthenes/src/omp/for_dynamic.c -o .bin/for_dynamic
+gcc -fopenmp sieve/Eratosthenes/src/omp/for_static.c -o .bin/for_static
+gcc -fopenmp sieve/Eratosthenes/src/omp/slicing.c -o .bin/slicing
 
-mpicc sieve/Eratosthenes/src/mpi/iterative.c -o .bin/exe/iterative
-mpicc sieve/Eratosthenes/src/mpi/single.c -o .bin/exe/single
+mpicc sieve/Eratosthenes/src/mpi/iterative.c -o .bin/iterative
+mpicc sieve/Eratosthenes/src/mpi/single.c -o .bin/single
 
 while [ $nexecs -ne 0 ]; do
 
   let nexecs--
 
-  ./.bin/exe/serial -N $N
+  ./.bin/serial -N $N
 
-  ./.bin/exe/for_auto -N $N -p $nthr
-  ./.bin/exe/for_dynamic -N $N -p $nthr
-  ./.bin/exe/for_static -N $N -p $nthr
-  ./.bin/exe/slicing -N $N -p $nthr
+  ./.bin/for_auto -N $N -p $nthr
+  ./.bin/for_dynamic -N $N -p $nthr
+  ./.bin/for_static -N $N -p $nthr
+  ./.bin/slicing -N $N -p $nthr
 
   if [ $cluster -eq 1 ]; then
     if [ $((N + 1024 > 1073741824)) -eq 1 ]; then
@@ -37,10 +37,10 @@ while [ $nexecs -ne 0 ]; do
     fi
     MEM=$((N + 1024))B
     salloc --nodes 7 --ntasks $npcs --mem $MEM sh
-    mpiexec ./.bin/exe/iterative -N $N
-    mpiexec ./.bin/exe/single -N $N
+    mpiexec ./.bin/iterative -N $N
+    mpiexec ./.bin/single -N $N
   else
-    mpiexec -np $npcs ./.bin/exe/iterative -N $N
-    mpiexec -np $npcs ./.bin/exe/single -N $N
+    mpiexec -np $npcs ./.bin/iterative -N $N
+    mpiexec -np $npcs ./.bin/single -N $N
   fi
 done
