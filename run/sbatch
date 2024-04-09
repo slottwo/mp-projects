@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#SBATCH -J $1
+#SBATCH -o $1-%j.out
+#SBATCH -e $1-%j.err
+#SBATCH -t 0-00:01:00
+#SBATCH --nodes=$2
+#SBATCH --ntasks=$3
+#SBATCH --mem=$4
+mpiexec ./$1
