@@ -53,7 +53,10 @@ int main(int argc, char *argv[])
 	clock_t clk;
 
 	if (rank == ROOT)
+	{
+		double t = MPI_Wtime();
 		clk = clock();
+	}
 
 	/* Start */
 
@@ -76,12 +79,13 @@ int main(int argc, char *argv[])
 	if (rank == ROOT)
 	{
 		clk = clock() - clk;
+		double t = MPI_Wtime();
 
 		FILE *log;
 		log = fopen(".bin/log/mpi_single", "a");
 		if (log == NULL)
 			exit(1);
-		fprintf(log, "%d %d\n", N, clk);
+		fprintf(log, "%d %d %d %lf\n", N, clk, wsize, t);
 		fclose(log);
 
 		// FILE *out;
