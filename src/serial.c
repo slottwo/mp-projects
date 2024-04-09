@@ -59,9 +59,7 @@ int main(int argc, char *argv[])
                 }
     BenchmarkInfo benchmark = NULL;
 
-    printf()
-
-        FILE *tmp;
+    FILE *tmp;
 
     // fprintf(stderr, "\033[36m"
     //                 "Setup\033[m"
