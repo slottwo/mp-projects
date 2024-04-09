@@ -9,14 +9,13 @@
  *
  */
 
+#include "../../lib/benchmark.h"
+#include "../../lib/utils.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 #include <mpi.h>
-
-/** @brief MPI main process */
-#define ROOT 0
 
 /** @brief 1 GB */
 #define _GB 1073741824
@@ -32,6 +31,7 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Status status;
+    BenchmarkInfo benchmark = NULL;
 
     size_t N = _GB;
 
@@ -42,11 +42,17 @@ int main(int argc, char *argv[])
                 if (--argc)
                     N = atol(*++argv);
 
+    // TODO -> get serial time
+    //FILE *_fp = fopen("", "r");
+    //double serial_start, serial_end;
+    //benchmark = benchmark_start_from("MPI iterative", rank, false, serial_start, serial_end);
+
     bool *NON_PRIMES = (bool *)calloc(N, sizeof(bool));
     bool *non_primes = (bool *)calloc(N, sizeof(bool));
     non_primes[0] = true;
     non_primes[1] = true;
 
+    benchmark = benchmark_start("MPI iterative", rank, false);
     clock_t clk = clock();
 
     /* Start */
@@ -71,6 +77,7 @@ int main(int argc, char *argv[])
     }
 
     /* End */
+    benchmark_stop(benchmark);
 
     if (rank == ROOT)
     {
@@ -96,6 +103,9 @@ int main(int argc, char *argv[])
     }
 
     free(non_primes);
+
+	benchmark_save_to(wsize, benchmark, "iterative-trace.json");
+	benchmark_show(wsize, true, benchmark);
 
     MPI_Finalize();
 

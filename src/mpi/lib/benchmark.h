@@ -42,3 +42,5 @@ void benchmark_show(int wsize, bool clear, BenchmarkInfo);
 
 /* Saves data as json for chrome tracing visual benchmark. */
 void benchmark_save(int wsize, BenchmarkInfo);
+
+void benchmark_save_to(int wsize, BenchmarkInfo benchmark, char *file);

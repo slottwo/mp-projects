@@ -9,6 +9,7 @@
  *
  */
 
+#include "../../lib/benchmark.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -32,6 +33,7 @@ int main(int argc, char *argv[])
 	MPI_Comm_size(MPI_COMM_WORLD, &wsize);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Status status;
+    BenchmarkInfo benchmark = NULL;
 
 	size_t N = _GB;
 
@@ -42,6 +44,11 @@ int main(int argc, char *argv[])
 				if (--argc)
 					N = atol(*++argv);
 
+    // TODO -> get serial time
+    //FILE *_fp = fopen("", "r");
+    //double serial_start, serial_end;
+    //benchmark = benchmark_start_from("MPI iterative", rank, false, serial_start, serial_end);
+
 	bool *NON_PRIMES;
 	if (rank == ROOT)
 		NON_PRIMES = (bool *)malloc(N * 1UL);
@@ -50,6 +57,7 @@ int main(int argc, char *argv[])
 	non_primes[0] = true;
 	non_primes[1] = true;
 
+    benchmark = benchmark_start("MPI iterative", rank, false);
 	clock_t clk;
 
 	if (rank == ROOT)
@@ -72,6 +80,7 @@ int main(int argc, char *argv[])
 	MPI_Reduce(non_primes, NON_PRIMES, N, MPI_C_BOOL, MPI_LOR, ROOT, MPI_COMM_WORLD);
 
 	/* End */
+    benchmark_stop(benchmark);
 
 	if (rank == ROOT)
 	{
@@ -97,6 +106,9 @@ int main(int argc, char *argv[])
 	}
 
 	free(non_primes);
+
+	benchmark_save_to(wsize, benchmark, "single-trace.json");
+	benchmark_show(wsize, true, benchmark);
 
 	MPI_Finalize();
 	return 0;

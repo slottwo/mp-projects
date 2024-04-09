@@ -460,7 +460,7 @@ static size_t _save_node(List node, int rank, char **out)
     return size;
 }
 
-void benchmark_save(int wsize, BenchmarkInfo benchmark)
+void benchmark_save_to(int wsize, BenchmarkInfo benchmark, char *file)
 {
     int rank = benchmark->rank;
     Info info = benchmark->list->list;
@@ -477,7 +477,7 @@ void benchmark_save(int wsize, BenchmarkInfo benchmark)
 
     // TODO -> Benchmark save on groups
     for (List l = info->list; l != NULL; l = l->next) {
-        // FIXME -> Memory error
+        // WATCH -> Memory error
         total_size += _save_node(l, rank, data + c) + 1; // Adds one space to the line-break
         c++;
     }
@@ -529,7 +529,7 @@ void benchmark_save(int wsize, BenchmarkInfo benchmark)
     // ROOT rank writes JSON data to file
     if (rank == ROOT) {
         // Create the JSON file for tracing
-        FILE *fp = fopen("trace.json", "w");
+        FILE *fp = fopen(file, "w");
         if (fp == NULL) {
             fprintf(stderr, "\33[31m""Error opening file.\33[m\n");
             MPI_Abort(MPI_COMM_WORLD, 1);
@@ -545,4 +545,9 @@ void benchmark_save(int wsize, BenchmarkInfo benchmark)
 
         free(file_buffer); // Free the memory allocated for the buffer
     }
+}
+
+void benchmark_save(int wsize, BenchmarkInfo benchmark)
+{
+    benchmark_save_to(wsize, benchmark, "trace.json");
 }
