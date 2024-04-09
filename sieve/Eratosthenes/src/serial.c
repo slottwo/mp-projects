@@ -20,18 +20,9 @@ int main(int argc, char *argv[])
                 if (--argc)
                     N = atol(*++argv);
 
-    // fprintf(stderr, "\033[36m"
-    //                 "Setup\033[m"
-    //                 "\t[%d]\n",
-    //         N);
-
     bool *non_primes = (bool *)calloc(N, sizeof(bool));
     non_primes[0] = true;
     non_primes[1] = true;
-
-    // fprintf(stderr, "\33[2K\033[A\r"
-    //                 "\033[33m"
-    //                 "Loading\n\033[m");
 
     clock_t clk = clock();
 
@@ -49,7 +40,7 @@ int main(int argc, char *argv[])
     clk = clock() - clk;
 
     FILE *log;
-    log = fopen("bin/log/serial", "a+");
+    log = fopen("bin/log/serial", "a");
     if (log == NULL)
         exit(1);
     fprintf(log, "%d %d\n", N, clk);
@@ -63,10 +54,6 @@ int main(int argc, char *argv[])
     //     if (!non_primes[i])
     //         fprintf(out, "%d ", i);
     // fclose(out);
-
-    // fprintf(stderr, "\33[2K\033[A\r"
-    //                 "\033[32m"
-    //                 "Done   \n\033[m");
 
     free(non_primes);
 

@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 		clk = clock() - clk;
 
 		FILE *log;
-		log = fopen("bin/log/mpi_single", "a+");
+		log = fopen("bin/log/mpi_single", "a");
 		if (log == NULL)
 			exit(1);
 		fprintf(log, "%d %d\n", N, clk);

@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
         clk = clock() - clk;
 
         FILE *log;
-        log = fopen("bin/log/mpi_iterative", "a+");
+        log = fopen("bin/log/mpi_iterative", "a");
         if (log == NULL)
             exit(1);
         fprintf(log, "%d %d\n", N, clk);

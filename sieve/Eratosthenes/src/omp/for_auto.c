@@ -58,7 +58,7 @@ int main(int argc, char const *argv[])
     clk = clock() - clk;
 
     FILE *log;
-    log = fopen("bin/log/omp_for_auto", "a+");
+    log = fopen("bin/log/omp_for_auto", "a");
     if (log == NULL)
         exit(1);
     fprintf(log, "%d %d %d\n", N, clk, NTHREADS);

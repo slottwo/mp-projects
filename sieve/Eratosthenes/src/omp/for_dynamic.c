@@ -10,7 +10,7 @@
 /** @brief Max numbers on output file */
 #define _L ((N > 10000) ? N : 10000)
 
-int main(int argc, char *argv[])
+int main(int argc, char const *argv[])
 {
     size_t N = _GB;
     int NTHREADS = omp_get_num_procs() / 2;
@@ -41,18 +41,16 @@ int main(int argc, char *argv[])
 
     /* Start */
 
-#pragma omp parallel num_threads(NTHREADS)
+    int k = 2;
+    while (!(k * k > N))
     {
-        int k = 2 + omp_get_thread_num();
-        while (!(k * k > N))
-        {
-            for (int i = k * k; i < N; i += k)
-                non_primes[i] = true;
+#pragma omp parallel for schedule(static) num_threads(NTHREADS)
+        for (int i = k * k; i < N; i += k)
+            non_primes[i] = true;
 
-            do
-                k++;
-            while (non_primes[k]);
-        }
+        do
+            k++;
+        while (non_primes[k]);
     }
 
     /* End */
@@ -60,14 +58,14 @@ int main(int argc, char *argv[])
     clk = clock() - clk;
 
     FILE *log;
-    log = fopen("bin/log/omp_slicing", "a+");
+    log = fopen("bin/log/omp_for_dynamic", "a");
     if (log == NULL)
         exit(1);
     fprintf(log, "%d %d %d\n", N, clk, NTHREADS);
     fclose(log);
 
     // FILE *out;
-    // out = fopen("bin/out/omp_slicing", "w");
+    // out = fopen("bin/out/omp_for_dynamic", "w");
     // if (out == NULL)
     //     exit(1);
     // for (i = 0; i < _L; i++)
