@@ -1,9 +1,24 @@
 #!/bin/bash
 
+mkdir -p .bin .bin/log
+cd .bin
+
 mpicc -c src/lib/benchmark.c
 mpicc -c src/mpi/iterative.c
 mpicc -c src/mpi/single.c
-mpicc -c src/omp/slicing.c
-mpicc -c src/omp/for-auto.c
-mpicc -c src/omp/for-auto.c
-mpicc -c src/omp/for-auto.c
+mpicc -c src/omp/for-auto.c -fopenmp
+mpicc -c src/omp/for-dynamic.c -fopenmp
+mpicc -c src/omp/for-static.c -fopenmp
+mpicc -c src/omp/slicing.c -fopenmp
+mpicc -c src/serial.c
+
+mpicc benchmark.o serial.o -o serial
+mpicc benchmark.o iterative.o
+mpicc benchmark.o single.o
+mpicc benchmark.o for-auto.o -fopenmp
+mpicc benchmark.o for-dynamic.o -fopenmp
+mpicc benchmark.o for-static.o -fopenmp
+mpicc benchmark.o slicing.o -fopenmp
+
+mpiexec serial
+mpiexec
