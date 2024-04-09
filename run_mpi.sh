@@ -33,18 +33,42 @@ if [ ! -d ".bin" ]; then
 fi
 cd .bin
 
-if [ "$1" == "sieve-of-Eratosthenes" ] || [ "$1" == "sieve-of-Sundaram" ] || [ "$1" == "sieve-of-Sundaram-cluster" ] ; then
-    if [ "$3" ] && [ "$3" == "-D" ]; then
-        mpicc -c ../src/mpi/$1.c -lm -g -fdiagnostics-color=always -D DEBUG
-        mpicc -o program.out "$1".o ./lib/*.o -lm -g
-    else
-        mpicc -c ../src/mpi/$1.c -lm
-        mpicc -o program.out "$1".o ./lib/*.o -lm
-    fi
-else
+# Associates each file to be compiled correctly
+COMPILER=""
+
+case "$1" in
+  "sieve-of-Eratosthenes" | "sieve-of-Sundaram" | "sieve-of-Sundaram-cluster" | "sfs" | "sun")
+    COMPILER=mpicc
+  ;;
+  "sieve-of-Sundaram-bitfull")
+    COMPILER=mpicxx
+  ;;
+  *)
     mpicc -o program.out ../src/mpi/$1.c -lm
+  ;;
+esac
+
+if [ "$COMPILER" ] ; then
+    if [ "$3" ] && [ "$3" == "-D" ] ; then
+        if [ "$(cat /proc/sys/kernel/yama/ptrace_scope)" != "0" ] ; then
+            >&2 printf "\33[33mMake sure you have gdb process attachment permitions.\n\33[m"
+            >&2 read -p "Run echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope if not [y/N]" c
+            case "$c" in
+              "y"* | "Y"*)
+                echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
+              ;;
+            esac
+        fi
+
+        $COMPILER -c ../src/mpi/$1.c -lm -g -fdiagnostics-color=always -D DEBUG
+        $COMPILER -o program.out "$1".o ./lib/*.o -lm -g
+    else
+        $COMPILER -c ../src/mpi/$1.c -lm
+        $COMPILER -o program.out "$1".o ./lib/*.o -lm
+    fi
 fi
 
+# Run the compiled files in the specified mode
 N=$(($2 > 1 ? $2 : 2))
 
 if [ -f program.out ]; then

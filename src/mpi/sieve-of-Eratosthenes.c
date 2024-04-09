@@ -10,6 +10,7 @@
  */
 
 #include "lib/benchmark.h"
+#include "lib/utils.h"
 #include <mpi.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -28,13 +29,11 @@
 #define COLS 20 // Number of cols in the output file
 
 #ifdef DEBUG
-#include "lib/utils.h"
 #include <unistd.h> // UNIX only
 #endif
 
 int main(int argc, char *argv[])
 {
-
 #ifdef DEBUG // Compile with `-D DEBUG`
 	// Waits debugger attachment
 	{
@@ -46,6 +45,7 @@ int main(int argc, char *argv[])
 		}
 	}
 #endif
+
 	/* MPI.h Initialization */
 	int wsize, rank;
 	MPI_Init(&argc, &argv);

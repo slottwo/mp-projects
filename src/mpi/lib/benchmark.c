@@ -1,3 +1,4 @@
+#include "utils.h"
 #include "benchmark.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,23 +9,7 @@
 #define NAME_BUFF_SIZE 256
 #define JSON_NODE_SIZE 256 + NAME_BUFF_SIZE
 #define PROMPT_CLR "\33[35m"
-#define MEMERR 43 // Memory allocation error
-#define ROOT 0 // MPI main process
 
-#define min(A, B) (((A) < (B)) ? (A) : (B))
-#define max(A, B) (((A) > (B)) ? (A) : (B))
-
-// Crash the app if memory was not created correctly
-#define emalloc(S) ({\
-        void *p = malloc(S);\
-        if (p == NULL) MPI_Abort(MPI_COMM_WORLD, MEMERR);\
-        p;}) // error check malloc
-#define ecalloc(N, S) ({\
-        void *p = calloc(N, S);\
-        if (p == NULL) MPI_Abort(MPI_COMM_WORLD, MEMERR);\
-        p;}) // error check calloc
-// Read about GCC compound statements here: <https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html>
-// and here: <https://stackoverflow.com/a/3533300>
 
 typedef struct node {
     double start_time;
