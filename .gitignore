@@ -2,3 +2,4 @@
 .bin/
 *.old
 *.out
+*.tmp
